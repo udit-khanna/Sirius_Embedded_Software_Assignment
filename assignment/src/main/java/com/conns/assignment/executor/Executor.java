@@ -1,19 +1,25 @@
 package com.conns.assignment.executor;
 
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
@@ -139,37 +145,22 @@ public class Executor {
 	 * @return
 	 */
 	public JSONObject getJsonObject(String filePath) {
-
-		JSONParser parser = new JSONParser();
-
-		Object obj;
 		JSONObject jsonObject = null;
+		InputStream input;
 		try {
 			logger.info(GET_JSON);
-			obj = parser.parse(new FileReader(TEST_DATA_PATH + filePath));
-			jsonObject = (JSONObject) obj;
+			input = this.getClass().getClassLoader().getResourceAsStream((filePath));
+			jsonObject = new JSONObject(new JSONTokener(new InputStreamReader(input)));
 			return jsonObject;
-		} catch (FileNotFoundException exception) {
+		} catch (Exception exception){
 			logger.fatal(exception);
-			Assert.fail(exception.getMessage());
-			exception.printStackTrace();
-		} catch (IOException exception) {
-			logger.fatal(exception);
-			Assert.fail(exception.getMessage());
-			exception.printStackTrace();
-
-		} catch (ParseException exception) {
-			logger.fatal(exception);
-			Assert.fail(exception.getMessage());
 			exception.printStackTrace();
 		}
-
 		return jsonObject;
-
 	}
 	
 	/**
-	 * Verifying the Url of Page
+	 * Verifying the URL of Page
 	 * 
 	 * @param text
 	 *            expected URL
@@ -326,8 +317,9 @@ public class Executor {
 			exception.printStackTrace();
 			Assert.fail(exception.getMessage());
 		}
-
 	}
+	
+	
 	/**
 	 * closing the browser
 	 */
@@ -375,6 +367,285 @@ public class Executor {
 		}
 	}
 	
+	/**
+	 * To set windows size
+	 * 
+	 * @param x
+	 *            contains x coordinates
+	 * @param y
+	 *            contains y coordinates
+	 */
+	public void setWindowSize(int x, int y){
+		logger.info("Setting window size to: " + x + "x" + y);
+		try {
+			driver.manage().window().setPosition(new Point(0, 0));
+			driver.manage().window().setSize(new Dimension(x,y));
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());		}
+	}
 	
+	/**
+	 * To get position of element on the webPage
+	 * 
+	 * @param element
+	 *            contains element
+	 * @return
+	 * 				List containing x and y coordinates
+	 */
+	public ArrayList<Integer> getPositionOfElement(WebElement element) {
+		logger.info("Getting location of element");
+		ArrayList<Integer> returnCoordinates = new ArrayList<>();
+		try {
+			Point coordinates = element.getLocation();
+			returnCoordinates.add(coordinates.getX());
+			returnCoordinates.add(coordinates.getY());	
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		return returnCoordinates;		
+	}
+	
+	/**
+	 * To compare position of element on the webPage in desktop and mobile mode
+	 * 
+	 * @param elementPosInDesktop
+	 *            contains position of element in desktop
+	 * @param elementPosInMobile
+	 * 			  contains position of element in mobile
+	 */
+	public void comparePositionsOfElement(ArrayList<Integer> elementPosInDesktop,
+			ArrayList<Integer> elementPosInMobile) {
+		logger.info("Comparing position of elements in desktop and mobile mode");
+		try {
+			elementPosInDesktop.removeAll(elementPosInMobile);
+			if(!(elementPosInDesktop.size() == 0)){
+				logger.info("Element position changed");
+			}else{
+				logger.info("Element position not changed");
+			}
+			assertFalse(elementPosInDesktop.size() == 0);
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+	}
+	
+	/**
+	 * To maximise the current window
+	 * 
+	 */
+	public void maximiseWindow() {
+		logger.info("Maximising window size");
+		try {
+			driver.manage().window().maximize();
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+	}
 
+	
+	/**
+	 * To get all the HyperLinks on webpage
+	 * 
+	 * @return
+	 * 		total number of HyperLinks 
+	 * 
+	 */
+	public int getAllHyperlinks() {
+		logger.info("Getting total number of HyperLinks on the page");
+		int totalLinks = 0;
+		try {
+			totalLinks = driver.findElements(By.tagName("a")).size();
+			logger.info("Total HyperLinks on page: " + totalLinks);
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		return totalLinks;
+	}
+
+	/**
+	 * To compare number of HyperLinks in Desktop and Mobile mode
+	 * 
+	 * @param totalHyperlinksInDesktopMode
+	 * 			total HyperLinks In Desktop Mode
+	 * 
+	 * @param totalHyperlinksInMobileMode
+	 * 			total HyperLinks In Mobile Mode
+	 * 
+	 */
+	public void compareTotalHyperlinks(int totalHyperlinksInDesktopMode, int totalHyperlinksInMobileMode) {
+		logger.info("Comparing total hyperlinks in desktop and mobile mode");
+		try {
+			if(totalHyperlinksInDesktopMode == totalHyperlinksInMobileMode){
+				logger.info("Same number of links on both modes");
+			}else if (totalHyperlinksInDesktopMode > totalHyperlinksInMobileMode){
+				logger.info("More HyperLinks in Desktop mode");
+			}else{
+				logger.info("More HyperLinks in Mobile mode");
+			}
+			assertTrue(totalHyperlinksInDesktopMode == totalHyperlinksInMobileMode);
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+	}
+
+	
+	/**
+	 * To get attribute value of list of elements
+	 * 
+	 * @param listOfElements
+	 * 			list Of Elements
+	 * 
+	 * @param attribute
+	 * 			attribute to be get
+	 * 
+	 * @return
+	 * 			List of attribute values
+	 * 
+	 */
+	public ArrayList<String> getAttributeValueOfElements(List<WebElement> listOfElements, String attribute) {
+		logger.info("Getting value of attribute: " + attribute);
+		ArrayList<String> attributeValues = new ArrayList<String>();
+		try {
+			for(WebElement element: listOfElements){
+				attributeValues.add(element.getAttribute(attribute));
+			}
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		return attributeValues;
+	}
+
+	/**
+	 * To get text of list of elements
+	 * 
+	 * @param listOfElements
+	 * 			list Of Elements
+	 * 
+	 * @return
+	 * 			List of text values
+	 * 
+	 */
+	public ArrayList<String> getTextOfElements(List<WebElement> listOfElements) {
+		logger.info("Getting text of elements");
+		ArrayList<String> textValues = new ArrayList<String>();
+		try {
+			for(WebElement element: listOfElements){
+				textValues.add(element.getText());
+			}
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		return textValues;
+	}
+
+	/**
+	 * To compare two lists
+	 * 
+	 * @param list1
+	 * 			list1 Of Elements
+	 * 
+	 * @param list2
+	 * 			list1 Of Elements
+	 */
+	public void compareTwoLists(ArrayList<String> list1,
+			ArrayList<String> list2) {
+		logger.info("Comparing two lists");
+		try {
+			list1.removeAll(list2);
+			if(list1.size()==0){
+				logger.info("Lists are same");
+			}else{
+				logger.info("Lists are not same");
+			}
+			assertTrue(list1.size()==0);
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+	}
+
+	/**
+	 * To check Text Of Elements
+	 * 
+	 * @param element
+	 * 			WebElement
+	 * 
+	 * @param message
+	 * 			expected String
+	 */
+	public void checkTextOfElement(WebElement element, String message) {
+		logger.info("Checking text of element");
+		try {
+			logger.info("Actual Text: " + element.getText());
+			logger.info("Expected Text: " + message);
+			assertTrue(element.getText().equalsIgnoreCase(message));
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		
+	}
+
+	/**
+	 * To check if Text is contained in Elements
+	 * 
+	 * @param element
+	 * 			WebElement
+	 * 
+	 * @param message
+	 * 			expected String
+	 */
+	public void checkTextContains(WebElement element, String message) {
+		logger.info("Checking text of element contains expected");
+		try {
+			logger.info("Actual Text: " + element.getText());
+			logger.info("Expected Text: " + message);
+			assertTrue(element.getText().contains(message));
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+	}
+
+
+	/**
+	 * To get Text Of element
+	 * 
+	 * @param element
+	 * 			WebElement
+	 * 
+	 * @return 
+	 * 			text of element
+	 */
+	public String getTextOfElement(WebElement element) {
+		logger.info("Getting text of element");
+		String returnStr = null;
+		try {
+			returnStr = element.getText();
+		} catch (Exception exception) {
+			logger.fatal(exception);
+			exception.printStackTrace();
+			Assert.fail(exception.getMessage());
+		}
+		return returnStr;
+	}
 }

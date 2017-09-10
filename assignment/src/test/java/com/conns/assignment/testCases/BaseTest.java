@@ -17,7 +17,7 @@ public class BaseTest {
 	
 	Logger logger;
 	Executor executor;
-	TestPage amazon;
+	TestPage testPage;
 	private final String Website_URL = "URL";
 	private final String STARTING_TESTCASE = "**********************Starting test cases *********************";
 	public static List<String> passValue = new ArrayList<String>();
@@ -26,7 +26,6 @@ public class BaseTest {
 	public BaseTest() {
 		logger = Logger.getLogger(BaseTest.class);
 		executor = new Executor();
-
 	}
 	
 	@BeforeMethod
